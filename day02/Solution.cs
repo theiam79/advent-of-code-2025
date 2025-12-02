@@ -78,7 +78,7 @@ rootCommand.SetAction(async Task<int>(parseResult, ct) =>
 
             var chunks = input.Chunk(sub.Length);
 
-            if (chunks.Skip(1).Any(c => string.Concat(c) != sub))
+            if (chunks.Skip(1).Any(c => !sub.SequenceEqual(c)))
             {
                 continue;
             }
