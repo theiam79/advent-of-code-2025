@@ -28,7 +28,7 @@ rootCommand.SetAction(async Task<int>(parseResult, ct) =>
 
     var input = await File.ReadAllTextAsync(inputFile.FullName, ct);
     
-    var sumOfbadProductCodes = input
+    var badProductCodes = input
         .Split(',')
         .Select(x =>
         {
@@ -44,24 +44,21 @@ rootCommand.SetAction(async Task<int>(parseResult, ct) =>
             return (Start: startNumber, End: endNumber);
         })
         .SelectMany(x => ExtractCodesFromRange(x.Start, x.End))
-        .Where(x => x.Length % 2 == 0)
-        .Select(x =>
-        {
-            var midPoint = x.Length / 2;
-            var firstHalf = x[..midPoint];
-            var secondHalf = x[midPoint..];
-            return (FullValue: x, FirstHalf: firstHalf, SecondHalf: secondHalf);
-        })
-        .Where(x => x.FirstHalf == x.SecondHalf)
-        .Select(x => long.Parse(x.FullValue))
+        .Select(CheckRepeating)
+        .OfType<RepeatResult>();
+
+    var solution1= badProductCodes
+        .Where(x => x.Occurences == 2)
+        .Select(x => x.Value)
         .Sum();
-
-    Console.WriteLine($"Solution 1: {sumOfbadProductCodes}");
-
-
     
+    var solution2= badProductCodes
+        .Select(x => x.Value)
+        .Sum();
+        
 
-
+    Console.WriteLine($"Solution 1: {solution1}");
+    Console.WriteLine($"Solution 1: {solution2}");
 
     return 0;
 
@@ -73,8 +70,28 @@ rootCommand.SetAction(async Task<int>(parseResult, ct) =>
         }
     }
 
+    RepeatResult? CheckRepeating(string input)
+    {
+        for (var i = input.Length / 2; i >= 1 ; i--)
+        {
+            var sub = input[..i];
 
+            var chunks = input.Chunk(sub.Length);
+
+            if (chunks.Skip(1).Any(c => string.Concat(c) != sub))
+            {
+                continue;
+            }
+
+            return new RepeatResult(long.Parse(input), sub, chunks.Count());
+        }
+        
+        return null;
+    }
 });
+
 
 var parseResult = rootCommand.Parse(args);
 return await parseResult.InvokeAsync();
+
+record RepeatResult(long Value, string RepeatingSequence, int Occurences);
