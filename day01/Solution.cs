@@ -25,20 +25,18 @@ rootCommand.SetAction((parseResult, ct) =>
         return Task.FromResult(-1);
     }
 
+    int startingLocation, currentLocation;
+    startingLocation = currentLocation = 50;
+
+    string? currentLine;
+
+    int stopOnZeroCount = 0;
+    int crossZeroCount = 0;
+
     using var inputStream = inputFile.OpenText();
-
-    var startingLocation = 50;
-    var currentLocation = startingLocation;
-    var currentLine = "";
-
-    var zeroCount = 0;
-
-    var index = 0;
 
     while((currentLine = inputStream.ReadLine()) != null)
     {
-        index++;
-
         var sign = currentLine[0] switch
         {
             'R' => 1,
@@ -52,30 +50,29 @@ rootCommand.SetAction((parseResult, ct) =>
         }
 
         var fullRevolutions = turnAmount / 100;
-        var revolutionRemainder = turnAmount % 100;
 
-        var actualChange = revolutionRemainder * sign;
+        crossZeroCount += fullRevolutions;
 
-        var relativePosition = currentLocation + actualChange;
+        var remainingMove = turnAmount % 100 * sign;
+        var relativePosition = currentLocation + remainingMove;
 
-        var crossedZeroDuringRemainder = (relativePosition < 0 && currentLocation != 0) || relativePosition > 100;
-
-        var totalTimesCrossingZero = fullRevolutions + (crossedZeroDuringRemainder ? 1 : 0);
+        if ((relativePosition < 0 && currentLocation != 0) || relativePosition > 100)
+        {
+            crossZeroCount++;
+        }
 
         var normalizedPosition = (relativePosition + 100) % 100;
 
         if (normalizedPosition == 0)
         {
-            zeroCount++;
+            stopOnZeroCount++;
         }
 
-        zeroCount += totalTimesCrossingZero;
-
-        // Console.WriteLine($"{currentLocation} => {currentLine} | {actualChange} (+{fullRevolutions} Revs) | {relativePosition} ({normalizedPosition}) | {totalTimesCrossingZero} ({zeroCount})");
         currentLocation = normalizedPosition;
     }
 
-    Console.WriteLine($"The password is {zeroCount}");
+    Console.WriteLine($"Solution 1: {stopOnZeroCount}");
+    Console.WriteLine($"Solution 2: {stopOnZeroCount + crossZeroCount}");
     return Task.FromResult(0);
 });
 
