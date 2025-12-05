@@ -420,3 +420,4 @@ FodyWeavers.xsd
 # aoc specifics
 **/input
 **/puzzle.md
+.fake
